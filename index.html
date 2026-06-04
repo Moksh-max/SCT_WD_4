@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SkillCraft · Tasks</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <div class="brand">
+      <div class="brand-logo">S</div>
+      <div>
+        <div class="brand-name">SkillCraft</div>
+        <div class="brand-sub">Task Manager</div>
+      </div>
+    </div>
+    <button class="btn-new-list" onclick="openNewListModal()">
+      <span>＋</span> New List
+    </button>
+  </div>
+
+  <div class="sidebar-scroll">
+    <div class="sidebar-section-label" style="margin-top:4px">My Lists</div>
+    <div id="listNav"></div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="stats-row">
+      <div class="stat-mini">
+        <div class="stat-mini-val" id="statTotal">0</div>
+        <div class="stat-mini-lbl">Total</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-val" id="statDone">0</div>
+        <div class="stat-mini-lbl">Done</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-val" id="statPending">0</div>
+        <div class="stat-mini-lbl">Pending</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-title-wrap">
+      <span class="list-color-dot" id="currentDot" style="color:#7c6af5" onclick="openEditListModal()"></span>
+      <input class="list-title-input" id="listTitleInput" value="My Tasks" placeholder="List name…" onblur="renameCurrentList(this.value)"/>
+    </div>
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-f="all"    onclick="setFilter('all',this)">All</button>
+      <button class="filter-tab"        data-f="active" onclick="setFilter('active',this)">Active</button>
+      <button class="filter-tab"        data-f="done"   onclick="setFilter('done',this)">Done</button>
+    </div>
+    <button class="sort-btn" onclick="cycleSort()">
+      <span id="sortIcon">↕</span> <span id="sortLabel">Sort</span>
+    </button>
+  </div>
+
+  <!-- Add bar -->
+  <div class="add-bar">
+    <div class="add-form">
+      <span class="add-icon">＋</span>
+      <input class="add-input" id="quickAdd" placeholder="Add a task… (press Enter)" autocomplete="off"
+        onkeydown="if(event.key==='Enter')quickAddTask()"/>
+      <div class="add-meta">
+        <input class="add-date-input" type="datetime-local" id="quickDate"/>
+        <select class="add-priority-select" id="quickPriority">
+          <option value="none">Priority</option>
+          <option value="high">🔴 High</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+      </div>
+      <button class="btn-add" onclick="quickAddTask()">Add Task</button>
+    </div>
+  </div>
+
+  <!-- Task area -->
+  <div class="task-area" id="taskArea"></div>
+</main>
+
+<!-- ── TOAST CONTAINER ── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ── TASK MODAL ── -->
+<div class="modal-backdrop hidden" id="taskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="taskModalTitle">Edit Task</span>
+      <button class="modal-close" onclick="closeTaskModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Task Name</label>
+        <input type="text" id="editText" placeholder="What needs to be done?"/>
+      </div>
+      <div class="field">
+        <label>Due Date & Time</label>
+        <input type="datetime-local" id="editDate"/>
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <div class="priority-radios">
+          <div class="p-radio" data-p="high"   onclick="selectPriority('high')">🔴 High</div>
+          <div class="p-radio" data-p="medium" onclick="selectPriority('medium')">🟡 Medium</div>
+          <div class="p-radio" data-p="low"    onclick="selectPriority('low')">🟢 Low</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Move to List</label>
+        <select id="editList"></select>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="editNotes" rows="3" placeholder="Optional notes…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
+      <button class="btn-save" onclick="saveTask()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── NEW LIST MODAL ── -->
+<div class="modal-backdrop hidden" id="listModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="listModalTitle">New List</span>
+      <button class="modal-close" onclick="closeListModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>List Name</label>
+        <input type="text" class="new-list-input" id="newListName" placeholder="e.g. Work, Shopping, Personal…"
+          onkeydown="if(event.key==='Enter')saveList()"/>
+      </div>
+      <div class="field">
+        <label>Color</label>
+        <div class="color-row" id="colorRow"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeListModal()">Cancel</button>
+      <button class="btn-save" onclick="saveList()">Create List</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
